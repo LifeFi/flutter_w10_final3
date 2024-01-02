@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_w10_final3/constants/gaps.dart';
 import 'package:flutter_w10_final3/constants/sizes.dart';
+import 'package:flutter_w10_final3/repos/moods_repo.dart';
 import 'package:flutter_w10_final3/view_models/home_view_model.dart';
+import 'package:flutter_w10_final3/view_models/moods_view_model.dart';
+import 'package:flutter_w10_final3/views/main_navigation_screen.dart';
+import 'package:flutter_w10_final3/views/post_screen.dart';
+import 'package:flutter_w10_final3/views/widgets/mood_tile.dart';
+import 'package:go_router/go_router.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
+  static const String routeURL = "/home";
   const HomeScreen({super.key});
 
   @override
@@ -12,51 +18,120 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class HomeScreenState extends ConsumerState<HomeScreen> {
-  int sizePlus = 0;
+  final ScrollController _scrollController = ScrollController();
+  bool _isMoreLoading = false;
 
-  _sendMeCheers() {
-    ref.read(homeScreenProvider.notifier).giveMeMore();
-    setState(() {
-      if (sizePlus < 100) {
-        ++sizePlus;
-      } else {
-        sizePlus = 0;
-      }
-    });
+  Future<void> _refresh() async {
+    if (ref.read(moodsProvider).isLoading) return;
+    await ref.read(moodsProvider.notifier).refresh();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_fetchNextItems);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _fetchNextItems() async {
+    print(
+        "${_scrollController.position.pixels} ====  ${_scrollController.position.maxScrollExtent}");
+    if (_isMoreLoading) return;
+    if (ref.read(moodsProvider).value != null &&
+        ref.read(moodsProvider).value!.length < fetchMoodsLimit) return;
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent) {
+      // 리스트 하단에 로딩바를 보여주기 위함.
+      setState(() {
+        _isMoreLoading = true;
+      });
+      await ref.read(moodsProvider.notifier).fetchNextItems();
+      setState(() {
+        _isMoreLoading = false;
+      });
+    }
+  }
+
+  _goToPost() {
+    context.go(PostScreen.routeURL);
   }
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: _sendMeCheers,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text("Be Ready!"),
-        ),
-        body: SingleChildScrollView(
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  ref.watch(homeScreenProvider),
-                  style: TextStyle(
-                    fontSize: Sizes.size28 + sizePlus,
-                  ),
-                ),
-                Gaps.v80,
-                TextButton(
-                  onPressed: _sendMeCheers,
-                  child: const Text(
-                    "응원 선물 받기 TAP!!",
-                    style: TextStyle(fontSize: Sizes.size28),
-                  ),
-                ),
-                Gaps.v80,
-              ],
+      child: RefreshIndicator.adaptive(
+        onRefresh: _refresh,
+        child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: Sizes.size20,
             ),
-          ),
-        ),
+            child: ref.watch(moodsProvider).when(
+                  error: (error, stackTrace) => Center(
+                    child: Text("Somthing is wrong: $error"),
+                  ),
+                  loading: () => const Center(
+                    child: CircularProgressIndicator.adaptive(),
+                  ),
+                  data: (data) {
+                    // print(data.length);
+                    if (data.isEmpty) {
+                      return Container(
+                        height: 120,
+                        alignment: Alignment.center,
+                        padding: const EdgeInsets.only(
+                          top: Sizes.size52,
+                          bottom: Sizes.size28,
+                        ),
+                        child: GestureDetector(
+                          onTap: _goToPost,
+                          child: const Text(
+                            "Write your first feeling 😀 →",
+                            style: TextStyle(
+                              fontSize: Sizes.size20,
+                            ),
+                          ),
+                        ),
+                      );
+                    } else {
+                      return ListView.builder(
+                        controller: _scrollController,
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        itemCount: data.length + 1,
+                        itemBuilder: (context, index) {
+                          if (index < data.length) {
+                            return MoodTile(
+                              text:
+                                  "Mood: ${data[index].moodEmoji}\n${data[index].content}",
+                              createdAt: data[index].createdAt!.toDate(),
+                            );
+                          } else if (_isMoreLoading) {
+                            return Container(
+                              padding: const EdgeInsets.only(
+                                top: Sizes.size10,
+                                bottom: Sizes.size28,
+                              ),
+                              child: const Center(
+                                child: CircularProgressIndicator.adaptive(),
+                              ),
+                            );
+                          }
+                          return Container(
+                            padding: const EdgeInsets.only(
+                              top: Sizes.size10,
+                              bottom: Sizes.size28,
+                            ),
+                          );
+                        },
+                      );
+                    }
+                    return null;
+                  },
+                )),
       ),
     );
   }
