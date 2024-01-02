@@ -44,6 +44,12 @@ class MoodsRepository {
     });
     return newPostRef.id;
   }
+
+  Future<void> deletetMood(String moodId) async {
+    final deleteRef = _db.collection("moods").doc(moodId);
+
+    await deleteRef.delete();
+  }
 }
 
 final moodsRepo = Provider(

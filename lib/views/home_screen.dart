@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -20,6 +21,8 @@ class HomeScreen extends ConsumerStatefulWidget {
 class HomeScreenState extends ConsumerState<HomeScreen> {
   final ScrollController _scrollController = ScrollController();
   bool _isMoreLoading = false;
+  final GlobalKey<AnimatedListState> _key = GlobalKey<AnimatedListState>();
+  final Duration _duration = const Duration(milliseconds: 300);
 
   Future<void> _refresh() async {
     if (ref.read(moodsProvider).isLoading) return;
@@ -44,6 +47,53 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
       ref.read(showBottomTabBarProvider.notifier).state = true;
     }
     print(ref.read(showBottomTabBarProvider.notifier).state);
+  }
+
+  void _showDeleteBottomsheet(String moodId) {
+    showCupertinoModalPopup(
+      context: context,
+      builder: (context) {
+        return CupertinoActionSheet(
+          title: const Text(
+            "Delete note",
+            style: TextStyle(
+              fontSize: Sizes.size18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          message: const Text(
+            "Are you sure you want to do this?",
+            style: TextStyle(
+              fontSize: Sizes.size18,
+            ),
+          ),
+          actions: [
+            CupertinoActionSheetAction(
+              onPressed: () {
+                _onDeleteTap(moodId);
+                Navigator.of(context).pop();
+              },
+              child: const Text(
+                "Delete",
+                style: TextStyle(
+                  color: Colors.red,
+                ),
+              ),
+            ),
+          ],
+          cancelButton: CupertinoActionSheetAction(
+            isDefaultAction: true,
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text("Cancel"),
+          ),
+        );
+      },
+    );
+  }
+
+  void _onDeleteTap(String moodId) {
+    ref.read(moodsProvider.notifier).deletetMood(moodId);
+    ref.read(moodsProvider.notifier).deleteAndShowFakeMood(moodId);
   }
 
   @override
@@ -118,9 +168,12 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
                       itemBuilder: (context, index) {
                         if (index < data.length) {
                           return MoodTile(
+                            key: Key(data[index].id),
                             text:
                                 "Mood: ${data[index].moodEmoji}\n${data[index].content}",
                             createdAt: data[index].createdAt!.toDate(),
+                            fn: () => _showDeleteBottomsheet(data[index].id),
+                            moodId: data[index].id,
                           );
                         } else if (_isMoreLoading) {
                           return Container(

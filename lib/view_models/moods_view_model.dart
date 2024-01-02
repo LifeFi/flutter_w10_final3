@@ -46,6 +46,27 @@ class MoodsViewModel extends AsyncNotifier<List<MoodModel>> {
     state = AsyncValue.data(_list);
   }
 
+  void deleteFakeMood(String moodId) {
+    final index = _list.indexWhere((mood) => mood.id == moodId);
+    _list.removeAt(index);
+    state = AsyncValue.data(_list);
+  }
+
+  Future<void> deleteAndShowFakeMood(String moodId) async {
+    final index = _list.indexWhere((mood) => mood.id == moodId);
+    _list[index].id = "00000000";
+    state = AsyncValue.data(_list);
+    await Future.delayed(
+      const Duration(milliseconds: 300),
+    );
+    _list.removeAt(index);
+    state = AsyncValue.data(_list);
+  }
+
+  Future<void> deletetMood(String moodId) async {
+    await _moodsRepository.deletetMood(moodId);
+  }
+
   @override
   FutureOr<List<MoodModel>> build() async {
     _moodsRepository = ref.read(moodsRepo);

@@ -80,7 +80,13 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
       context: context,
       builder: (context) {
         return CupertinoActionSheet(
-          title: const Text("Log out"),
+          title: const Text(
+            "Log out",
+            style: TextStyle(
+              fontSize: Sizes.size18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           message: Text(
             "${ref.watch(usersProvider).value?.name}, are you sure to logout?",
             style: const TextStyle(
