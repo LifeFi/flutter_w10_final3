@@ -170,7 +170,7 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
         _selectedIndex != _tabs.indexOf(widget.tab)) {
       _pageController.animateToPage(
         _tabs.indexOf(widget.tab),
-        duration: const Duration(milliseconds: 200),
+        duration: const Duration(milliseconds: 100),
         curve: Curves.easeInOut,
       );
     }

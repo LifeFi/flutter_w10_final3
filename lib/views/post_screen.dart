@@ -4,6 +4,7 @@ import 'package:flutter_w10_final3/constants/gaps.dart';
 import 'package:flutter_w10_final3/constants/sizes.dart';
 import 'package:flutter_w10_final3/view_models/post_mood_view_model.dart';
 import 'package:flutter_w10_final3/views/widgets/big_button.dart';
+import 'package:go_router/go_router.dart';
 
 class PostScreen extends ConsumerStatefulWidget {
   static const String routeURL = "/post";
@@ -67,6 +68,7 @@ class PostScreenState extends ConsumerState<PostScreen> {
       _selectedMoodEmojiIndex = null;
       _controller.text = "";
     });
+    context.go("/home");
   }
 
   @override
