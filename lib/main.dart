@@ -3,8 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_w10_final3/firebase_options.dart';
+import 'package:flutter_w10_final3/repos/recent_login_email_repo.dart';
 import 'package:flutter_w10_final3/router.dart';
+import 'package:flutter_w10_final3/view_models/recent_email_login_view_model.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,10 +23,17 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  final preferences = await SharedPreferences.getInstance();
+  final repository = RecentLoginEmailRepository(preferences);
 
   runApp(
-    const ProviderScope(
-      child: MyApp(),
+    ProviderScope(
+      overrides: [
+        recentLoginEmailProvider.overrideWith(
+          () => RecentLoginEmailViewModel(repository),
+        ),
+      ],
+      child: const MyApp(),
     ),
   );
 }

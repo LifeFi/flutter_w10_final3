@@ -1,9 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_w10_final3/constants/sizes.dart';
 import 'package:flutter_w10_final3/repos/authentication_repo.dart';
+import 'package:flutter_w10_final3/view_models/main_navigation_view_model.dart';
 import 'package:flutter_w10_final3/view_models/user_profile_view_model.dart';
 import 'package:flutter_w10_final3/views/home_screen.dart';
 import 'package:flutter_w10_final3/views/login_screen.dart';
@@ -15,6 +15,7 @@ class MainNavigationScreen extends ConsumerStatefulWidget {
   static const String routeName = "mainNavigation";
   static const String routeURL = "/:tab(home|post)";
   final String tab;
+
   const MainNavigationScreen({
     super.key,
     this.tab = "home",
@@ -34,6 +35,10 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
     "home",
     "post",
   ];
+
+  DateTime? lastTapTime;
+  int tapCount = 0;
+
   @override
   void initState() {
     super.initState();
@@ -133,9 +138,32 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
     super.dispose();
   }
 
+  _eightTappedToLogout() {
+    DateTime now = DateTime.now();
+    if (lastTapTime == null || now.difference(lastTapTime!).inSeconds > 1) {
+      // 1초가 넘었으면 카운트 초기화
+      tapCount = 0;
+    }
+    lastTapTime = now;
+    tapCount++;
+
+    if (tapCount == 8) {
+      // 8번 탭하면 실행
+      _onLogoutTap();
+      tapCount = 0; // 작업 실행 후 카운트 초기화
+    }
+    print(tapCount);
+    setState(() {});
+  }
+
+  void _tapToggleShowBottomTabBar() {
+    ref.read(showBottomTabBarProvider.notifier).update((state) => !state);
+  }
+
   @override
   Widget build(BuildContext context) {
     print("_selectedIndex @MainNavigation : $_selectedIndex");
+    ref.watch(showBottomTabBarProvider);
 
     if (mounted &&
         _pageController.hasClients &&
@@ -148,73 +176,91 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
     }
     _selectedIndex = _tabs.indexOf(widget.tab);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: GestureDetector(
-          onLongPress: _showLogoutBottomsheet,
-          child: const Text(
-            "🔥 MOOD 🔥",
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
+    return GestureDetector(
+      onTap: _tapToggleShowBottomTabBar,
+      child: Scaffold(
+        appBar: AppBar(
+          title: GestureDetector(
+            onLongPress: _showLogoutBottomsheet,
+            child: const Text(
+              "🔥 MOOD 🔥",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
-        ),
-      ),
-      body: PageView(
-        controller: _pageController,
-        onPageChanged: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-        },
-        children: const [
-          HomeScreen(),
-          PostScreen(),
-          // 기타 탭 스크린들...
-        ],
-      ),
-
-      /* 
-       Stack(
-        children: [
-          Offstage(
-            offstage: _selectedIndex != 0,
-            child: const HomeScreen(),
-          ),
-          Offstage(
-            offstage: _selectedIndex != 1,
-            child: const PostScreen(),
-          )
-        ],
-      ),
-       */
-      bottomNavigationBar: Container(
-        height: Sizes.size96,
-        padding: const EdgeInsets.only(
-          bottom: Sizes.size20,
-        ),
-        decoration: const BoxDecoration(
-          // color: Colors.red,
-          border: Border(
-            top: BorderSide(
-              width: 1.5,
-            ),
-          ),
-        ),
-        child: Row(
-          children: [
-            NavTab(
-              isSelected: _selectedIndex == 0,
-              icon: Icons.home,
-              selectedIcon: Icons.home_filled,
-              onTap: () => _onTap(0),
-            ),
-            NavTab(
-              isSelected: _selectedIndex == 1,
-              icon: Icons.mode_edit_outlined,
-              selectedIcon: Icons.mode_edit,
-              onTap: () => _onTap(1),
+          actions: [
+            IconButton(
+              onPressed: _eightTappedToLogout,
+              icon: Icon(
+                Icons.logout,
+                color: Colors.transparent,
+                size: Sizes.size20 + tapCount * 3,
+              ),
             )
+          ],
+        ),
+        body: Stack(
+          children: [
+            PageView(
+              controller: _pageController,
+              onPageChanged: (index) {
+                context.go("/${_tabs[index]}");
+                // setState(() {
+                //   _selectedIndex = index;
+                // });
+              },
+              children: const [
+                HomeScreen(),
+                PostScreen(),
+                // 기타 탭 스크린들...
+              ],
+            ),
+            Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                child: AnimatedSlide(
+                  offset: Offset(
+                    0.0,
+                    _selectedIndex == 0
+                        ? (ref.read(showBottomTabBarProvider.notifier).state
+                            ? 0.0
+                            : 1.0)
+                        : 0.0,
+                  ),
+                  duration: const Duration(milliseconds: 150),
+                  child: Container(
+                    height: Sizes.size96,
+                    padding: const EdgeInsets.only(
+                      bottom: Sizes.size20,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).scaffoldBackgroundColor,
+                      border: const Border(
+                        top: BorderSide(
+                          width: 1.5,
+                        ),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        NavTab(
+                          isSelected: _selectedIndex == 0,
+                          icon: Icons.home,
+                          selectedIcon: Icons.home_filled,
+                          onTap: () => _onTap(0),
+                        ),
+                        NavTab(
+                          isSelected: _selectedIndex == 1,
+                          icon: Icons.mode_edit_outlined,
+                          selectedIcon: Icons.mode_edit,
+                          onTap: () => _onTap(1),
+                        )
+                      ],
+                    ),
+                  ),
+                ))
           ],
         ),
       ),

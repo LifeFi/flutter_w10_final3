@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_w10_final3/constants/gaps.dart';
 import 'package:flutter_w10_final3/constants/sizes.dart';
-import 'package:flutter_w10_final3/view_models/email_log_in_view_model.dart';
 import 'package:flutter_w10_final3/view_models/email_sign_up_view_model.dart';
 import 'package:flutter_w10_final3/views/login_screen.dart';
 import 'package:flutter_w10_final3/views/widgets/big_button.dart';

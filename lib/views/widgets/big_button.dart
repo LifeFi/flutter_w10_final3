@@ -26,7 +26,7 @@ class BigButton extends StatelessWidget {
     return Column(
       children: [
         GestureDetector(
-          onTap: enabled && !isLoading ? () => fn() : () {},
+          onTap: enabled || isLoading ? () => fn() : () {},
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 300),
             width: width ?? double.maxFinite,
@@ -37,7 +37,7 @@ class BigButton extends StatelessWidget {
                 Sizes.size24,
               ),
               color:
-                  enabled && !isLoading ? color : Colors.white.withOpacity(0.7),
+                  enabled && isLoading ? color : Colors.white.withOpacity(0.7),
               border: Border.all(
                 width: Sizes.size2,
               ),

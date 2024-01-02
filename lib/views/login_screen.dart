@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_w10_final3/constants/gaps.dart';
 import 'package:flutter_w10_final3/constants/sizes.dart';
-import 'package:flutter_w10_final3/view_models/email_log_in_view_model.dart';
+import 'package:flutter_w10_final3/view_models/email_login_view_model.dart';
+import 'package:flutter_w10_final3/view_models/recent_email_login_view_model.dart';
 import 'package:flutter_w10_final3/views/sign_up_screen.dart';
 import 'package:flutter_w10_final3/views/widgets/big_button.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -20,8 +21,18 @@ class LoginScreen extends ConsumerStatefulWidget {
 
 class LoginScreenState extends ConsumerState<LoginScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  late final TextEditingController _emailController;
+
   Map<String, String> formData = {};
   bool _autoValidate = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _emailController =
+        TextEditingController(text: ref.read(recentLoginEmailProvider));
+    formData["email"] = _emailController.text;
+  }
 
   void _onScaffoldTap() {
     FocusScope.of(context).unfocus();
@@ -67,6 +78,13 @@ class LoginScreenState extends ConsumerState<LoginScreen> {
     context.goNamed(SignUpScreen.routeName);
   }
 
+  _onClearEmailTap() {
+    formData["email"] = "";
+    _emailController.text = "";
+    ref.read(recentLoginEmailProvider.notifier).resetLoginEmail("");
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -107,7 +125,9 @@ class LoginScreenState extends ConsumerState<LoginScreen> {
                     SizedBox(
                       height: Sizes.size52,
                       child: TextFormField(
+                        controller: _emailController,
                         textInputAction: TextInputAction.next,
+                        // autofocus: true,
                         decoration: InputDecoration(
                           filled: true,
                           fillColor: Colors.white,
@@ -131,7 +151,23 @@ class LoginScreenState extends ConsumerState<LoginScreen> {
                             ),
                             borderRadius: BorderRadius.circular(Sizes.size28),
                           ),
+                          suffix: _emailController.text.isNotEmpty
+                              ? GestureDetector(
+                                  onTap: _onClearEmailTap,
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(
+                                      right: Sizes.size10,
+                                    ),
+                                    child: FaIcon(
+                                      FontAwesomeIcons.solidCircleXmark,
+                                      color: Colors.grey.withOpacity(0.7),
+                                      size: Sizes.size20,
+                                    ),
+                                  ),
+                                )
+                              : null,
                         ),
+                        //  onTap: () => _formKey.currentState!.save(),
                         validator: (value) {
                           if (_autoValidate) {
                             if (value == null || value.isEmpty) {

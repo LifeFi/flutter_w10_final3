@@ -4,6 +4,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_w10_final3/repos/authentication_repo.dart';
 import 'package:flutter_w10_final3/utils.dart';
+import 'package:flutter_w10_final3/view_models/recent_email_login_view_model.dart';
 import 'package:flutter_w10_final3/view_models/user_profile_view_model.dart';
 import 'package:flutter_w10_final3/views/main_navigation_screen.dart';
 import 'package:go_router/go_router.dart';
@@ -35,6 +36,7 @@ class EmailSignUpViewModel extends AsyncNotifier<void> {
       showFirebaseErrorSnack(context, state.error);
     } else {
       await resetProviders(ref);
+      ref.read(recentLoginEmailProvider.notifier).resetLoginEmail(email);
       if (context.mounted) {
         context.goNamed(
           MainNavigationScreen.routeName,
