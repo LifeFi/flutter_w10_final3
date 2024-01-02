@@ -10,7 +10,10 @@ String diffTimeString({required DateTime dateTime, bool isLong = false}) {
   final diffMSec =
       curTime.millisecondsSinceEpoch - dateTime.millisecondsSinceEpoch;
   String result;
-  if (diffMSec < 60 * 60 * 1000) {
+
+  if (diffMSec < 60 * 1000) {
+    result = "Just now";
+  } else if (diffMSec < 60 * 60 * 1000) {
     result =
         "${(diffMSec / (60 * 1000)).round()}${isLong ? " minutes ago" : "m"}";
   } else if (diffMSec < 24 * 60 * 60 * 1000) {
