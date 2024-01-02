@@ -37,7 +37,7 @@ class BigButton extends StatelessWidget {
                 Sizes.size24,
               ),
               color:
-                  enabled && isLoading ? color : Colors.white.withOpacity(0.7),
+                  enabled && !isLoading ? color : Colors.white.withOpacity(0.7),
               border: Border.all(
                 width: Sizes.size2,
               ),
